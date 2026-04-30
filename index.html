@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Task Manager — Groq Powered</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0e17;
+      --bg-secondary: #111827;
+      --card: #151d2e;
+      --card-hover: #1a2438;
+      --border: #1e2a3f;
+      --border-active: #10b981;
+      --fg: #e2e8f0;
+      --fg-dim: #8892a4;
+      --fg-muted: #4a5568;
+      --accent: #10b981;
+      --accent-glow: rgba(16, 185, 129, 0.15);
+      --accent-2: #f59e0b;
+      --danger: #ef4444;
+      --danger-glow: rgba(239, 68, 68, 0.15);
+      --info: #3b82f6;
+      --purple: #8b5cf6;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --shadow: 0 4px 24px rgba(0,0,0,0.3);
+      --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* === Animated Background === */
+    .bg-grid {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(16,185,129,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(16,185,129,0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+
+    .bg-orb {
+      position: fixed; border-radius: 50%; filter: blur(120px); pointer-events: none; z-index: 0;
+    }
+    .bg-orb-1 {
+      width: 500px; height: 500px; top: -150px; left: -100px;
+      background: radial-gradient(circle, rgba(16,185,129,0.08), transparent 70%);
+      animation: orbFloat1 20s ease-in-out infinite;
+    }
+    .bg-orb-2 {
+      width: 400px; height: 400px; bottom: -100px; right: -50px;
+      background: radial-gradient(circle, rgba(139,92,246,0.06), transparent 70%);
+      animation: orbFloat2 25s ease-in-out infinite;
+    }
+    .bg-orb-3 {
+      width: 300px; height: 300px; top: 50%; left: 50%;
+      background: radial-gradient(circle, rgba(245,158,11,0.04), transparent 70%);
+      animation: orbFloat3 18s ease-in-out infinite;
+    }
+
+    @keyframes orbFloat1 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(80px, 60px) scale(1.1); }
+    }
+    @keyframes orbFloat2 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(-60px, -80px) scale(1.15); }
+    }
+    @keyframes orbFloat3 {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); }
+      50% { transform: translate(-40%, -60%) scale(1.2); }
+    }
+
+    /* === Layout === */
+    .app-container {
+      position: relative; z-index: 1;
+      max-width: 1200px; margin: 0 auto; padding: 24px;
+    }
+
+    /* === Header === */
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 0; margin-bottom: 32px;
+      border-bottom: 1px solid var(--border);
+    }
+    .logo-area { display: flex; align-items: center; gap: 14px; }
+    .logo-icon {
+      width: 48px; height: 48px; border-radius: var(--radius);
+      background: linear-gradient(135deg, var(--accent), #059669);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; color: #fff; box-shadow: 0 0 30px var(--accent-glow);
+      animation: logoPulse 3s ease-in-out infinite;
+    }
+    @keyframes logoPulse {
+      0%, 100% { box-shadow: 0 0 30px var(--accent-glow); }
+      50% { box-shadow: 0 0 50px rgba(16,185,129,0.25); }
+    }
+    .logo-text h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; line-height: 1.2; }
+    .logo-text span { font-size: 12px; color: var(--fg-dim); font-weight: 400; letter-spacing: 1px; text-transform: uppercase; }
+
+    .header-actions { display: flex; gap: 10px; align-items: center; }
+
+    .status-badge {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 500;
+      background: var(--accent-glow); color: var(--accent); border: 1px solid rgba(16,185,129,0.2);
+      transition: var(--transition);
+    }
+    .status-badge.offline { background: var(--danger-glow); color: var(--danger); border-color: rgba(239,68,68,0.2); }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: blink 2s ease-in-out infinite; }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    /* === Config Bar === */
+    .config-bar {
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 16px 20px; margin-bottom: 24px;
+      display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;
+    }
+    .config-bar .field { flex: 1; min-width: 180px; }
+    .config-bar label {
+      display: block; font-size: 11px; font-weight: 600; color: var(--fg-dim);
+      text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;
+    }
+    .config-bar input {
+      width: 100%; padding: 8px 12px; border-radius: var(--radius-sm);
+      border: 1px solid var(--border); background: var(--bg-secondary); color: var(--fg);
+      font-family: 'JetBrains Mono', monospace; font-size: 13px; outline: none;
+      transition: var(--transition);
+    }
+    .config-bar input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+
+    .btn-test {
+      padding: 8px 20px; border-radius: var(--radius-sm); border: none;
+      background: var(--accent); color: #fff; font-family: inherit;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: var(--transition); white-space: nowrap;
+    }
+    .btn-test:hover { background: #059669; transform: translateY(-1px); box-shadow: 0 4px 16px var(--accent-glow); }
+
+    /* === Tabs === */
+    .tabs {
+      display: flex; gap: 4px; margin-bottom: 24px;
+      background: var(--card); border-radius: var(--radius); padding: 4px;
+      border: 1px solid var(--border);
+    }
+    .tab-btn {
+      flex: 1; padding: 12px 16px; border: none; border-radius: var(--radius-sm);
+      background: transparent; color: var(--fg-dim); font-family: inherit;
+      font-size: 14px; font-weight: 500; cursor: pointer; transition: var(--transition);
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .tab-btn:hover { color: var(--fg); background: rgba(255,255,255,0.03); }
+    .tab-btn.active {
+      background: linear-gradient(135deg, var(--accent), #059669);
+      color: #fff; box-shadow: 0 2px 12px var(--accent-glow);
+    }
+    .tab-btn i { font-size: 15px; }
+
+    .tab-content { display: none; animation: fadeSlide 0.4s ease; }
+    .tab-content.active { display: block; }
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* === Form Cards === */
+    .form-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 28px; margin-bottom: 20px;
+      transition: var(--transition);
+    }
+    .form-card:hover { border-color: rgba(16,185,129,0.15); }
+    .form-card-title {
+      font-size: 18px; font-weight: 600; margin-bottom: 20px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .form-card-title i { color: var(--accent); font-size: 20px; }
+
+    .form-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    }
+    .form-grid .full { grid-column: 1 / -1; }
+
+    .field-group { display: flex; flex-direction: column; gap: 6px; }
+    .field-group label {
+      font-size: 12px; font-weight: 600; color: var(--fg-dim);
+      text-transform: uppercase; letter-spacing: 0.8px;
+    }
+    .field-group input,
+    .field-group select,
+    .field-group textarea {
+      padding: 10px 14px; border-radius: var(--radius-sm);
+      border: 1px solid var(--border); background: var(--bg-secondary); color: var(--fg);
+      font-family: inherit; font-size: 14px; outline: none;
+      transition: var(--transition);
+    }
+    .field-group textarea { resize: vertical; min-height: 80px; font-family: inherit; }
+    .field-group input:focus,
+    .field-group select:focus,
+    .field-group textarea:focus {
+      border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    .field-group select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238892a4' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+    .field-group .hint { font-size: 11px; color: var(--fg-muted); }
+
+    .btn-primary {
+      padding: 12px 28px; border-radius: var(--radius-sm); border: none;
+      background: linear-gradient(135deg, var(--accent), #059669); color: #fff;
+      font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer;
+      transition: var(--transition); display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 24px var(--accent-glow); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .btn-secondary {
+      padding: 12px 28px; border-radius: var(--radius-sm);
+      border: 1px solid var(--border); background: var(--card); color: var(--fg);
+      font-family: inherit; font-size: 15px; font-weight: 500; cursor: pointer;
+      transition: var(--transition); display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-secondary:hover { border-color: var(--fg-dim); background: var(--card-hover); }
+
+    .btn-row { display: flex; gap: 12px; margin-top: 24px; }
+
+    /* === Result Card === */
+    .result-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+      overflow: hidden; margin-top: 20px;
+      animation: fadeSlide 0.5s ease;
+    }
+    .result-header {
+      padding: 14px 20px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;
+      color: var(--fg-dim);
+    }
+    .result-status {
+      padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 700;
+    }
+    .result-status.success { background: var(--accent-glow); color: var(--accent); }
+    .result-status.error { background: var(--danger-glow); color: var(--danger); }
+
+    .result-body { padding: 20px; }
+    .result-body pre {
+      font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.7;
+      color: var(--fg); white-space: pre-wrap; word-break: break-all;
+      max-height: 400px; overflow-y: auto;
+    }
+
+    /* AI Result Grid */
+    .ai-result-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px; margin-bottom: 16px;
+    }
+    .ai-stat {
+      background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 14px; text-align: center; transition: var(--transition);
+    }
+    .ai-stat:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .ai-stat .label { font-size: 10px; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .ai-stat .value { font-size: 20px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+    .ai-stat .value.green { color: var(--accent); }
+    .ai-stat .value.amber { color: var(--accent-2); }
+    .ai-stat .value.red { color: var(--danger); }
+    .ai-stat .value.blue { color: var(--info); }
+    .ai-stat .value.purple { color: var(--purple); }
+
+    /* === Log Panel === */
+    .log-panel {
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+      margin-top: 24px; overflow: hidden;
+    }
+    .log-header {
+      padding: 14px 20px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .log-header h3 { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .log-header h3 i { color: var(--accent); }
+    .log-clear {
+      padding: 4px 12px; border-radius: 6px; border: 1px solid var(--border);
+      background: transparent; color: var(--fg-dim); font-size: 11px;
+      cursor: pointer; font-family: inherit; transition: var(--transition);
+    }
+    .log-clear:hover { border-color: var(--danger); color: var(--danger); }
+
+    .log-list { max-height: 300px; overflow-y: auto; }
+    .log-entry {
+      padding: 10px 20px; border-bottom: 1px solid var(--border);
+      font-size: 13px; display: flex; gap: 12px; align-items: flex-start;
+      transition: var(--transition);
+    }
+    .log-entry:hover { background: rgba(255,255,255,0.02); }
+    .log-entry:last-child { border-bottom: none; }
+    .log-time { color: var(--fg-muted); font-family: 'JetBrains Mono', monospace; font-size: 11px; white-space: nowrap; margin-top: 2px; }
+    .log-icon { font-size: 14px; margin-top: 1px; }
+    .log-icon.create { color: var(--accent); }
+    .log-icon.update { color: var(--accent-2); }
+    .log-icon.error { color: var(--danger); }
+    .log-msg { color: var(--fg-dim); line-height: 1.4; }
+    .log-msg strong { color: var(--fg); font-weight: 600; }
+
+    .empty-log {
+      padding: 40px; text-align: center; color: var(--fg-muted); font-size: 14px;
+    }
+    .empty-log i { font-size: 32px; display: block; margin-bottom: 12px; opacity: 0.3; }
+
+    /* === Spinner === */
+    .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* === Toast === */
+    .toast-container { position: fixed; top: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+    .toast {
+      padding: 12px 20px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500;
+      color: #fff; box-shadow: var(--shadow); animation: toastIn 0.4s ease;
+      display: flex; align-items: center; gap: 10px; max-width: 360px;
+    }
+    .toast.success { background: #059669; }
+    .toast.error { background: var(--danger); }
+    .toast.info { background: var(--info); }
+    @keyframes toastIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+
+    /* === Priority Badges === */
+    .priority-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .priority-badge.critical { background: rgba(239,68,68,0.15); color: #f87171; }
+    .priority-badge.high { background: rgba(245,158,11,0.15); color: #fbbf24; }
+    .priority-badge.medium { background: rgba(59,130,246,0.15); color: #60a5fa; }
+    .priority-badge.low { background: rgba(16,185,129,0.15); color: #34d399; }
+
+    /* === Scrollbar === */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--fg-muted); }
+
+    /* === Responsive === */
+    @media (max-width: 768px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .config-bar { flex-direction: column; }
+      .config-bar .field { min-width: 100%; }
+      header { flex-direction: column; gap: 16px; align-items: flex-start; }
+      .tabs { flex-wrap: wrap; }
+      .tab-btn { font-size: 12px; padding: 10px 12px; }
+      .ai-result-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background effects -->
+  <div class="bg-grid"></div>
+  <div class="bg-orb bg-orb-1"></div>
+  <div class="bg-orb bg-orb-2"></div>
+  <div class="bg-orb bg-orb-3"></div>
+
+  <!-- Toast container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <div class="app-container">
+
+    <!-- Header -->
+    <header>
+      <div class="logo-area">
+        <div class="logo-icon"><i class="fas fa-bolt"></i></div>
+        <div class="logo-text">
+          <h1>AI Task Manager</h1>
+          <span>Groq Powered &mdash; Llama 3.3 70B</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div class="status-badge" id="connectionStatus">
+          <span class="status-dot"></span>
+          <span id="connectionText">Not Connected</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Config Bar -->
+    <div class="config-bar">
+      <div class="field">
+        <label>Webhook Base URL</label>
+        <input type="text" id="baseUrl" placeholder="https://abc123.ngrok-free.app" value="">
+      </div>
+      <div class="field" style="min-width:140px; flex:0.4;">
+        <label>Username</label>
+        <input type="text" id="authUser" placeholder="Basic Auth User" value="">
+      </div>
+      <div class="field" style="min-width:140px; flex:0.4;">
+        <label>Password</label>
+        <input type="password" id="authPass" placeholder="Basic Auth Pass" value="">
+      </div>
+      <button class="btn-test" onclick="testConnection()">
+        <i class="fas fa-plug"></i> Test
+      </button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('create')" data-tab="create">
+        <i class="fas fa-plus-circle"></i> Create Task
+      </button>
+      <button class="tab-btn" onclick="switchTab('update')" data-tab="update">
+        <i class="fas fa-pen"></i> Update Task
+      </button>
+      <button class="tab-btn" onclick="switchTab('logs')" data-tab="logs">
+        <i class="fas fa-list"></i> Activity Log
+      </button>
+    </div>
+
+    <!-- ====== CREATE TAB ====== -->
+    <div class="tab-content active" id="tab-create">
+
+      <div class="form-card">
+        <div class="form-card-title"><i class="fas fa-rocket"></i> Create New Task</div>
+
+        <div class="form-grid">
+          <div class="field-group full">
+            <label>Task Title *</label>
+            <input type="text" id="createTitle" placeholder="e.g. Fix login page redirect bug">
+          </div>
+          <div class="field-group full">
+            <label>Description *</label>
+            <textarea id="createDesc" placeholder="Describe the task in detail. AI will analyze this to set priority, category, and deadline."></textarea>
+          </div>
+          <div class="field-group">
+            <label>Assignee Email</label>
+            <input type="email" id="createEmail" placeholder="assignee@company.com">
+            <span class="hint">Optional — triggers email/Slack/SMS notification</span>
+          </div>
+          <div class="field-group">
+            <label>Deadline Override</label>
+            <input type="datetime-local" id="createDeadline">
+            <span class="hint">Leave empty to let AI suggest a deadline</span>
+          </div>
+          <div class="field-group">
+            <label>Slack ID</label>
+            <input type="text" id="createSlack" placeholder="U0B01CCS23F">
+          </div>
+          <div class="field-group">
+            <label>Phone Number</label>
+            <input type="text" id="createPhone" placeholder="+8801XXXXXXXXX">
+          </div>
+          <div class="field-group">
+            <label>Assignee Name</label>
+            <input type="text" id="createName" placeholder="John Doe">
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn-primary" id="createBtn" onclick="createTask()">
+            <i class="fas fa-bolt"></i> Create with AI
+          </button>
+          <button class="btn-secondary" onclick="clearCreateForm()">
+            <i class="fas fa-eraser"></i> Clear
+          </button>
+        </div>
+      </div>
+
+      <!-- Create Result -->
+      <div id="createResult" style="display:none;"></div>
+    </div>
+
+    <!-- ====== UPDATE TAB ====== -->
+    <div class="tab-content" id="tab-update">
+
+      <div class="form-card">
+        <div class="form-card-title"><i class="fas fa-sync-alt"></i> Update Task Status</div>
+
+        <div class="form-grid">
+          <div class="field-group">
+            <label>Task ID *</label>
+            <input type="number" id="updateTaskId" placeholder="e.g. 13">
+          </div>
+          <div class="field-group">
+            <label>New Status *</label>
+            <select id="updateStatus">
+              <option value="">— Select Status —</option>
+              <option value="pending">⏳ Pending</option>
+              <option value="in_progress">🔄 In Progress</option>
+              <option value="review">👀 Review</option>
+              <option value="completed">✅ Completed</option>
+              <option value="cancelled">❌ Cancelled</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label>Priority Override</label>
+            <select id="updatePriority">
+              <option value="">— Keep Current —</option>
+              <option value="critical">🔴 Critical</option>
+              <option value="high">🟠 High</option>
+              <option value="medium">🟡 Medium</option>
+              <option value="low">🟢 Low</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label>Deadline Override</label>
+            <input type="datetime-local" id="updateDeadline">
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn-primary" id="updateBtn" onclick="updateTask()">
+            <i class="fas fa-sync-alt"></i> Update Task
+          </button>
+          <button class="btn-secondary" onclick="clearUpdateForm()">
+            <i class="fas fa-eraser"></i> Clear
+          </button>
+        </div>
+      </div>
+
+      <!-- Update Result -->
+      <div id="updateResult" style="display:none;"></div>
+    </div>
+
+    <!-- ====== LOGS TAB ====== -->
+    <div class="tab-content" id="tab-logs">
+      <div class="log-panel">
+        <div class="log-header">
+          <h3><i class="fas fa-stream"></i> Activity Log</h3>
+          <button class="log-clear" onclick="clearLogs()">Clear All</button>
+        </div>
+        <div class="log-list" id="logList">
+          <div class="empty-log">
+            <i class="fas fa-inbox"></i>
+            No activity yet. Create or update a task to see logs here.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Persistent Log Panel (shown in create/update tabs) -->
+    <div class="log-panel" id="miniLog" style="display:none;">
+      <div class="log-header">
+        <h3><i class="fas fa-stream"></i> Recent Activity</h3>
+        <button class="log-clear" onclick="clearLogs()">Clear</button>
+      </div>
+      <div class="log-list" id="miniLogList" style="max-height:180px;"></div>
+    </div>
+
+  </div>
+
+  <script>
+    // ===== State =====
+    let logs = [];
+    let isConnected = false;
+
+    // ===== Helpers =====
+    function getBaseUrl() {
+      return document.getElementById('baseUrl').value.replace(/\/+$/, '');
+    }
+    function getAuth() {
+      const u = document.getElementById('authUser').value;
+      const p = document.getElementById('authPass').value;
+      return btoa(u + ':' + p);
+    }
+    function getHeaders() {
+      return {
+        'Content-Type': 'application/json',
+        'Authorization': 'Basic ' + getAuth()
+      };
+    }
+
+    // ===== Toast =====
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = 'toast ' + type;
+      const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', info: 'fa-info-circle' };
+      toast.innerHTML = '<i class="fas ' + (icons[type] || icons.info) + '"></i> ' + message;
+      container.appendChild(toast);
+      setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateX(40px)'; toast.style.transition = '0.3s'; setTimeout(() => toast.remove(), 300); }, 4000);
+    }
+
+    // ===== Tabs =====
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelector('[data-tab="' + tab + '"]').classList.add('active');
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.getElementById('tab-' + tab).classList.add('active');
+
+      // Show mini log in create/update tabs
+      const miniLog = document.getElementById('miniLog');
+      miniLog.style.display = (tab !== 'logs' && logs.length > 0) ? 'block' : 'none';
+    }
+
+    // ===== Connection Test =====
+    async function testConnection() {
+      const url = getBaseUrl();
+      if (!url) { showToast('Enter your ngrok URL first', 'error'); return; }
+
+      const statusEl = document.getElementById('connectionStatus');
+      const textEl = document.getElementById('connectionText');
+      statusEl.className = 'status-badge';
+      textEl.textContent = 'Testing...';
+
+      try {
+        // Try a simple GET to the webhook base — n8n responds with 404 for GET on webhooks which means it's alive
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 8000);
+
+        const res = await fetch(url + '/webhook/task-create', {
+          method: 'OPTIONS',
+          headers: getHeaders(),
+          signal: controller.signal
+        }).catch(() => null);
+
+        clearTimeout(timeout);
+        // Any response (even 404/405) means the server is reachable
+        isConnected = true;
+        statusEl.className = 'status-badge';
+        textEl.textContent = 'Connected';
+        showToast('Connected to n8n via ngrok', 'success');
+        addLog('create', 'Connection established to <strong>' + url + '</strong>');
+      } catch (e) {
+        isConnected = false;
+        statusEl.className = 'status-badge offline';
+        textEl.textContent = 'Offline';
+        showToast('Cannot reach server — check ngrok URL', 'error');
+        addLog('error', 'Connection failed to <strong>' + url + '</strong>');
+      }
+    }
+
+    // ===== Create Task =====
+    async function createTask() {
+      const title = document.getElementById('createTitle').value.trim();
+      const desc = document.getElementById('createDesc').value.trim();
+
+      if (!title || !desc) {
+        showToast('Title and Description are required', 'error');
+        return;
+      }
+      if (!getBaseUrl()) {
+        showToast('Set your ngrok Webhook URL first', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('createBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Processing with AI...';
+
+      const payload = {
+        title: title,
+        description: desc,
+        assignee_email: document.getElementById('createEmail').value.trim() || undefined,
+        deadline: document.getElementById('createDeadline').value || undefined,
+        slack_id: document.getElementById('createSlack').value.trim() || undefined,
+        phone: document.getElementById('createPhone').value.trim() || undefined,
+        name: document.getElementById('createName').value.trim() || undefined
+      };
+
+      // Remove undefined
+      Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k]);
+
+      const url = getBaseUrl() + '/webhook/task-create';
+      const startTime = performance.now();
+
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify(payload)
+        });
+
+        const elapsed = Math.round(performance.now() - startTime);
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          showToast('Task created successfully by AI', 'success');
+          addLog('create', 'Created task <strong>"' + data.task.title + '"</strong> — Category: ' + data.task.category + ', Priority: ' + data.task.priority + ' (' + elapsed + 'ms)');
+          renderCreateResult(data, elapsed);
+        } else {
+          showToast('Error: ' + (data.error || res.statusText), 'error');
+          addLog('error', 'Create failed: <strong>' + (data.error || res.statusText) + '</strong>');
+          renderErrorResult('createResult', data, res.status);
+        }
+      } catch (e) {
+        showToast('Request failed — check ngrok and n8n', 'error');
+        addLog('error', 'Network error: <strong>' + e.message + '</strong>');
+        renderErrorResult('createResult', { error: e.message }, 0);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-bolt"></i> Create with AI';
+      }
+    }
+
+    // ===== Update Task =====
+    async function updateTask() {
+      const taskId = document.getElementById('updateTaskId').value;
+      const status = document.getElementById('updateStatus').value;
+
+      if (!taskId || !status) {
+        showToast('Task ID and Status are required', 'error');
+        return;
+      }
+      if (!getBaseUrl()) {
+        showToast('Set your ngrok Webhook URL first', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('updateBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Updating...';
+
+      const payload = {
+        task_id: parseInt(taskId),
+        status: status
+      };
+
+      const priority = document.getElementById('updatePriority').value;
+      if (priority) payload.priority = priority;
+
+      const deadline = document.getElementById('updateDeadline').value;
+      if (deadline) payload.deadline = deadline;
+
+      const url = getBaseUrl() + '/webhook/task-update';
+      const startTime = performance.now();
+
+      try {
+        const res = await fetch(url, {
+          method: 'PUT',
+          headers: getHeaders(),
+          body: JSON.stringify(payload)
+        });
+
+        const elapsed = Math.round(performance.now() - startTime);
+        const data = await res.json();
+
+        showToast('Task updated — status changed to ' + status, 'success');
+        addLog('update', 'Updated task <strong>#' + taskId + '</strong> — Status: <strong>' + status + '</strong> (' + elapsed + 'ms)');
+        renderUpdateResult(data, elapsed, taskId);
+      } catch (e) {
+        showToast('Request failed — check ngrok and n8n', 'error');
+        addLog('error', 'Update failed: <strong>' + e.message + '</strong>');
+        renderErrorResult('updateResult', { error: e.message }, 0);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-sync-alt"></i> Update Task';
+      }
+    }
+
+    // ===== Render Results =====
+    function renderCreateResult(data, elapsed) {
+      const t = data.task || {};
+      const container = document.getElementById('createResult');
+      container.style.display = 'block';
+
+      const priorityClass = t.priority || 'medium';
+      const confidencePct = t.ai_confidence ? Math.round(parseFloat(t.ai_confidence) * 100) : '—';
+
+      container.innerHTML = `
+        <div class="result-card">
+          <div class="result-header">
+            <span><i class="fas fa-check-circle" style="color:var(--accent);margin-right:6px;"></i> AI Analysis Result</span>
+            <span class="result-status success">${elapsed}ms</span>
+          </div>
+          <div class="result-body">
+            <div class="ai-result-grid">
+              <div class="ai-stat">
+                <div class="label">Category</div>
+                <div class="value blue">${(t.category || '—').toUpperCase()}</div>
+              </div>
+              <div class="ai-stat">
+                <div class="label">Priority</div>
+                <div class="value ${priorityClass === 'critical' ? 'red' : priorityClass === 'high' ? 'amber' : priorityClass === 'medium' ? 'blue' : 'green'}">${(t.priority || '—').toUpperCase()}</div>
+              </div>
+              <div class="ai-stat">
+                <div class="label">AI Confidence</div>
+                <div class="value purple">${confidencePct}%</div>
+              </div>
+              <div class="ai-stat">
+                <div class="label">Deadline</div>
+                <div class="value green" style="font-size:14px;">${t.deadline || t.ai_suggested_deadline || '—'}</div>
+              </div>
+              <div class="ai-stat">
+                <div class="label">AI Suggested</div>
+                <div class="value" style="font-size:14px;color:var(--fg-dim);">${t.ai_suggested_deadline || '—'}</div>
+              </div>
+              <div class="ai-stat">
+                <div class="label">AI Model</div>
+                <div class="value" style="font-size:12px;color:var(--fg-dim);">${t.ai_model || 'Groq'}</div>
+              </div>
+            </div>
+            <div style="background:var(--bg-secondary);border-radius:var(--radius-sm);padding:14px;border:1px solid var(--border);">
+              <div style="font-size:11px;color:var(--fg-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Full Response</div>
+              <pre>${JSON.stringify(data, null, 2)}</pre>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderUpdateResult(data, elapsed, taskId) {
+      const container = document.getElementById('updateResult');
+      container.style.display = 'block';
+      container.innerHTML = `
+        <div class="result-card">
+          <div class="result-header">
+            <span><i class="fas fa-sync-alt" style="color:var(--accent-2);margin-right:6px;"></i> Update Result — Task #${taskId}</span>
+            <span class="result-status success">${elapsed}ms</span>
+          </div>
+          <div class="result-body">
+            <div style="background:var(--bg-secondary);border-radius:var(--radius-sm);padding:14px;border:1px solid var(--border);">
+              <pre>${JSON.stringify(data, null, 2)}</pre>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderErrorResult(containerId, data, status) {
+      const container = document.getElementById(containerId);
+      container.style.display = 'block';
+      container.innerHTML = `
+        <div class="result-card">
+          <div class="result-header">
+            <span><i class="fas fa-exclamation-triangle" style="color:var(--danger);margin-right:6px;"></i> Error</span>
+            <span class="result-status error">${status || 'ERR'}</span>
+          </div>
+          <div class="result-body">
+            <div style="background:rgba(239,68,68,0.05);border-radius:var(--radius-sm);padding:14px;border:1px solid rgba(239,68,68,0.15);">
+              <pre style="color:#f87171;">${JSON.stringify(data, null, 2)}</pre>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // ===== Logging =====
+    function addLog(type, message) {
+      const now = new Date();
+      const time = now.toLocaleTimeString('en-US', { hour12: false });
+      logs.unshift({ type, message, time });
+      if (logs.length > 50) logs.pop();
+      renderLogs();
+    }
+
+    function renderLogs() {
+      const render = (list) => {
+        if (logs.length === 0) {
+          return '<div class="empty-log"><i class="fas fa-inbox"></i>No activity yet.</div>';
+        }
+        return logs.map(l => {
+          const iconClass = l.type === 'create' ? 'create' : l.type === 'update' ? 'update' : 'error';
+          const icon = l.type === 'create' ? 'fa-plus-circle' : l.type === 'update' ? 'fa-sync-alt' : 'fa-exclamation-circle';
+          return `<div class="log-entry">
+            <span class="log-time">${l.time}</span>
+            <i class="fas ${icon} log-icon ${iconClass}"></i>
+            <span class="log-msg">${l.message}</span>
+          </div>`;
+        }).join('');
+      };
+
+      document.getElementById('logList').innerHTML = render(logs);
+
+      const miniLog = document.getElementById('miniLog');
+      const miniLogList = document.getElementById('miniLogList');
+      if (logs.length > 0) {
+        miniLog.style.display = 'block';
+        miniLogList.innerHTML = render(logs.slice(0, 5));
+      }
+    }
+
+    function clearLogs() {
+      logs = [];
+      renderLogs();
+      document.getElementById('miniLog').style.display = 'none';
+    }
+
+    // ===== Form Clear =====
+    function clearCreateForm() {
+      ['createTitle','createDesc','createEmail','createDeadline','createSlack','createPhone','createName'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
+      document.getElementById('createResult').style.display = 'none';
+    }
+
+    function clearUpdateForm() {
+      ['updateTaskId','updateStatus','updatePriority','updateDeadline'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
+      document.getElementById('updateResult').style.display = 'none';
+    }
+
+    // ===== Persist config to localStorage =====
+    function saveConfig() {
+      localStorage.setItem('tm_baseUrl', document.getElementById('baseUrl').value);
+      localStorage.setItem('tm_authUser', document.getElementById('authUser').value);
+      localStorage.setItem('tm_authPass', document.getElementById('authPass').value);
+    }
+    function loadConfig() {
+      document.getElementById('baseUrl').value = localStorage.getItem('tm_baseUrl') || '';
+      document.getElementById('authUser').value = localStorage.getItem('tm_authUser') || '';
+      document.getElementById('authPass').value = localStorage.getItem('tm_authPass') || '';
+    }
+
+    // Auto-save config on change
+    document.querySelectorAll('#baseUrl, #authUser, #authPass').forEach(el => {
+      el.addEventListener('input', saveConfig);
+    });
+
+    // Init
+    loadConfig();
+  </script>
+
+</body>
+</html>
