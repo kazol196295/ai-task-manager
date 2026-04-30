@@ -1,13 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI Task Manager — Groq Powered</title>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
     :root {
       --bg: #0a0e17;
@@ -28,11 +37,13 @@
       --purple: #8b5cf6;
       --radius: 12px;
       --radius-sm: 8px;
-      --shadow: 0 4px 24px rgba(0,0,0,0.3);
+      --shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
       --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    html { scroll-behavior: smooth; }
+    html {
+      scroll-behavior: smooth;
+    }
 
     body {
       font-family: 'Space Grotesk', sans-serif;
@@ -45,343 +56,877 @@
 
     /* === Animated Background === */
     .bg-grid {
-      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
       background-image:
-        linear-gradient(rgba(16,185,129,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(16,185,129,0.03) 1px, transparent 1px);
+        linear-gradient(rgba(16, 185, 129, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(16, 185, 129, 0.03) 1px, transparent 1px);
       background-size: 60px 60px;
     }
 
     .bg-orb {
-      position: fixed; border-radius: 50%; filter: blur(120px); pointer-events: none; z-index: 0;
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: 0;
     }
+
     .bg-orb-1 {
-      width: 500px; height: 500px; top: -150px; left: -100px;
-      background: radial-gradient(circle, rgba(16,185,129,0.08), transparent 70%);
+      width: 500px;
+      height: 500px;
+      top: -150px;
+      left: -100px;
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.08), transparent 70%);
       animation: orbFloat1 20s ease-in-out infinite;
     }
+
     .bg-orb-2 {
-      width: 400px; height: 400px; bottom: -100px; right: -50px;
-      background: radial-gradient(circle, rgba(139,92,246,0.06), transparent 70%);
+      width: 400px;
+      height: 400px;
+      bottom: -100px;
+      right: -50px;
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.06), transparent 70%);
       animation: orbFloat2 25s ease-in-out infinite;
     }
+
     .bg-orb-3 {
-      width: 300px; height: 300px; top: 50%; left: 50%;
-      background: radial-gradient(circle, rgba(245,158,11,0.04), transparent 70%);
+      width: 300px;
+      height: 300px;
+      top: 50%;
+      left: 50%;
+      background: radial-gradient(circle, rgba(245, 158, 11, 0.04), transparent 70%);
       animation: orbFloat3 18s ease-in-out infinite;
     }
 
     @keyframes orbFloat1 {
-      0%, 100% { transform: translate(0, 0) scale(1); }
-      50% { transform: translate(80px, 60px) scale(1.1); }
+
+      0%,
+      100% {
+        transform: translate(0, 0) scale(1);
+      }
+
+      50% {
+        transform: translate(80px, 60px) scale(1.1);
+      }
     }
+
     @keyframes orbFloat2 {
-      0%, 100% { transform: translate(0, 0) scale(1); }
-      50% { transform: translate(-60px, -80px) scale(1.15); }
+
+      0%,
+      100% {
+        transform: translate(0, 0) scale(1);
+      }
+
+      50% {
+        transform: translate(-60px, -80px) scale(1.15);
+      }
     }
+
     @keyframes orbFloat3 {
-      0%, 100% { transform: translate(-50%, -50%) scale(1); }
-      50% { transform: translate(-40%, -60%) scale(1.2); }
+
+      0%,
+      100% {
+        transform: translate(-50%, -50%) scale(1);
+      }
+
+      50% {
+        transform: translate(-40%, -60%) scale(1.2);
+      }
     }
 
     /* === Layout === */
     .app-container {
-      position: relative; z-index: 1;
-      max-width: 1200px; margin: 0 auto; padding: 24px;
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
     }
 
     /* === Header === */
     header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 20px 0; margin-bottom: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 0;
+      margin-bottom: 32px;
       border-bottom: 1px solid var(--border);
     }
-    .logo-area { display: flex; align-items: center; gap: 14px; }
+
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
     .logo-icon {
-      width: 48px; height: 48px; border-radius: var(--radius);
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius);
       background: linear-gradient(135deg, var(--accent), #059669);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 22px; color: #fff; box-shadow: 0 0 30px var(--accent-glow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      color: #fff;
+      box-shadow: 0 0 30px var(--accent-glow);
       animation: logoPulse 3s ease-in-out infinite;
     }
-    @keyframes logoPulse {
-      0%, 100% { box-shadow: 0 0 30px var(--accent-glow); }
-      50% { box-shadow: 0 0 50px rgba(16,185,129,0.25); }
-    }
-    .logo-text h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; line-height: 1.2; }
-    .logo-text span { font-size: 12px; color: var(--fg-dim); font-weight: 400; letter-spacing: 1px; text-transform: uppercase; }
 
-    .header-actions { display: flex; gap: 10px; align-items: center; }
+    @keyframes logoPulse {
+
+      0%,
+      100% {
+        box-shadow: 0 0 30px var(--accent-glow);
+      }
+
+      50% {
+        box-shadow: 0 0 50px rgba(16, 185, 129, 0.25);
+      }
+    }
+
+    .logo-text h1 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      line-height: 1.2;
+    }
+
+    .logo-text span {
+      font-size: 12px;
+      color: var(--fg-dim);
+      font-weight: 400;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
 
     .status-badge {
-      display: flex; align-items: center; gap: 6px;
-      padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 500;
-      background: var(--accent-glow); color: var(--accent); border: 1px solid rgba(16,185,129,0.2);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      background: var(--accent-glow);
+      color: var(--accent);
+      border: 1px solid rgba(16, 185, 129, 0.2);
       transition: var(--transition);
     }
-    .status-badge.offline { background: var(--danger-glow); color: var(--danger); border-color: rgba(239,68,68,0.2); }
-    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: blink 2s ease-in-out infinite; }
-    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    .status-badge.offline {
+      background: var(--danger-glow);
+      color: var(--danger);
+      border-color: rgba(239, 68, 68, 0.2);
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: blink 2s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.3;
+      }
+    }
 
     /* === Config Bar === */
     .config-bar {
-      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
-      padding: 16px 20px; margin-bottom: 24px;
-      display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: flex-end;
     }
-    .config-bar .field { flex: 1; min-width: 180px; }
+
+    .config-bar .field {
+      flex: 1;
+      min-width: 180px;
+    }
+
     .config-bar label {
-      display: block; font-size: 11px; font-weight: 600; color: var(--fg-dim);
-      text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--fg-dim);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
     }
+
     .config-bar input {
-      width: 100%; padding: 8px 12px; border-radius: var(--radius-sm);
-      border: 1px solid var(--border); background: var(--bg-secondary); color: var(--fg);
-      font-family: 'JetBrains Mono', monospace; font-size: 13px; outline: none;
+      width: 100%;
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--bg-secondary);
+      color: var(--fg);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      outline: none;
       transition: var(--transition);
     }
-    .config-bar input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+
+    .config-bar input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
 
     .btn-test {
-      padding: 8px 20px; border-radius: var(--radius-sm); border: none;
-      background: var(--accent); color: #fff; font-family: inherit;
-      font-size: 13px; font-weight: 600; cursor: pointer;
-      transition: var(--transition); white-space: nowrap;
+      padding: 8px 20px;
+      border-radius: var(--radius-sm);
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      white-space: nowrap;
     }
-    .btn-test:hover { background: #059669; transform: translateY(-1px); box-shadow: 0 4px 16px var(--accent-glow); }
+
+    .btn-test:hover {
+      background: #059669;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px var(--accent-glow);
+    }
 
     /* === Tabs === */
     .tabs {
-      display: flex; gap: 4px; margin-bottom: 24px;
-      background: var(--card); border-radius: var(--radius); padding: 4px;
+      display: flex;
+      gap: 4px;
+      margin-bottom: 24px;
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 4px;
       border: 1px solid var(--border);
     }
+
     .tab-btn {
-      flex: 1; padding: 12px 16px; border: none; border-radius: var(--radius-sm);
-      background: transparent; color: var(--fg-dim); font-family: inherit;
-      font-size: 14px; font-weight: 500; cursor: pointer; transition: var(--transition);
-      display: flex; align-items: center; justify-content: center; gap: 8px;
+      flex: 1;
+      padding: 12px 16px;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--fg-dim);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
-    .tab-btn:hover { color: var(--fg); background: rgba(255,255,255,0.03); }
+
+    .tab-btn:hover {
+      color: var(--fg);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
     .tab-btn.active {
       background: linear-gradient(135deg, var(--accent), #059669);
-      color: #fff; box-shadow: 0 2px 12px var(--accent-glow);
+      color: #fff;
+      box-shadow: 0 2px 12px var(--accent-glow);
     }
-    .tab-btn i { font-size: 15px; }
 
-    .tab-content { display: none; animation: fadeSlide 0.4s ease; }
-    .tab-content.active { display: block; }
+    .tab-btn i {
+      font-size: 15px;
+    }
+
+    .tab-content {
+      display: none;
+      animation: fadeSlide 0.4s ease;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
     @keyframes fadeSlide {
-      from { opacity: 0; transform: translateY(12px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     /* === Form Cards === */
     .form-card {
-      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
-      padding: 28px; margin-bottom: 20px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      margin-bottom: 20px;
       transition: var(--transition);
     }
-    .form-card:hover { border-color: rgba(16,185,129,0.15); }
-    .form-card-title {
-      font-size: 18px; font-weight: 600; margin-bottom: 20px;
-      display: flex; align-items: center; gap: 10px;
+
+    .form-card:hover {
+      border-color: rgba(16, 185, 129, 0.15);
     }
-    .form-card-title i { color: var(--accent); font-size: 20px; }
+
+    .form-card-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .form-card-title i {
+      color: var(--accent);
+      font-size: 20px;
+    }
 
     .form-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
     }
-    .form-grid .full { grid-column: 1 / -1; }
 
-    .field-group { display: flex; flex-direction: column; gap: 6px; }
-    .field-group label {
-      font-size: 12px; font-weight: 600; color: var(--fg-dim);
-      text-transform: uppercase; letter-spacing: 0.8px;
+    .form-grid .full {
+      grid-column: 1 / -1;
     }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field-group label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--fg-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
     .field-group input,
     .field-group select,
     .field-group textarea {
-      padding: 10px 14px; border-radius: var(--radius-sm);
-      border: 1px solid var(--border); background: var(--bg-secondary); color: var(--fg);
-      font-family: inherit; font-size: 14px; outline: none;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--bg-secondary);
+      color: var(--fg);
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
       transition: var(--transition);
     }
-    .field-group textarea { resize: vertical; min-height: 80px; font-family: inherit; }
+
+    .field-group textarea {
+      resize: vertical;
+      min-height: 80px;
+      font-family: inherit;
+    }
+
     .field-group input:focus,
     .field-group select:focus,
     .field-group textarea:focus {
-      border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
     }
-    .field-group select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238892a4' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
-    .field-group .hint { font-size: 11px; color: var(--fg-muted); }
+
+    .field-group select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238892a4' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 32px;
+    }
+
+    .field-group .hint {
+      font-size: 11px;
+      color: var(--fg-muted);
+    }
+
+    .field-group-row {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+
+    .field-group-row .field-group {
+      flex: 1;
+    }
+
+    .btn-refresh {
+      margin-top: 22px;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--bg-secondary);
+      color: var(--fg-dim);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .btn-refresh:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
 
     .btn-primary {
-      padding: 12px 28px; border-radius: var(--radius-sm); border: none;
-      background: linear-gradient(135deg, var(--accent), #059669); color: #fff;
-      font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer;
-      transition: var(--transition); display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 28px;
+      border-radius: var(--radius-sm);
+      border: none;
+      background: linear-gradient(135deg, var(--accent), #059669);
+      color: #fff;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
     }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 24px var(--accent-glow); }
-    .btn-primary:active { transform: translateY(0); }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px var(--accent-glow);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
 
     .btn-secondary {
-      padding: 12px 28px; border-radius: var(--radius-sm);
-      border: 1px solid var(--border); background: var(--card); color: var(--fg);
-      font-family: inherit; font-size: 15px; font-weight: 500; cursor: pointer;
-      transition: var(--transition); display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 28px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--fg);
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
     }
-    .btn-secondary:hover { border-color: var(--fg-dim); background: var(--card-hover); }
 
-    .btn-row { display: flex; gap: 12px; margin-top: 24px; }
+    .btn-secondary:hover {
+      border-color: var(--fg-dim);
+      background: var(--card-hover);
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
 
     /* === Result Card === */
     .result-card {
-      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
-      overflow: hidden; margin-top: 20px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-top: 20px;
       animation: fadeSlide 0.5s ease;
     }
+
     .result-header {
-      padding: 14px 20px; border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
-      font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
       color: var(--fg-dim);
     }
-    .result-status {
-      padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 700;
-    }
-    .result-status.success { background: var(--accent-glow); color: var(--accent); }
-    .result-status.error { background: var(--danger-glow); color: var(--danger); }
 
-    .result-body { padding: 20px; }
+    .result-status {
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .result-status.success {
+      background: var(--accent-glow);
+      color: var(--accent);
+    }
+
+    .result-status.error {
+      background: var(--danger-glow);
+      color: var(--danger);
+    }
+
+    .result-body {
+      padding: 20px;
+    }
+
     .result-body pre {
-      font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.7;
-      color: var(--fg); white-space: pre-wrap; word-break: break-all;
-      max-height: 400px; overflow-y: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--fg);
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 400px;
+      overflow-y: auto;
     }
 
     /* AI Result Grid */
     .ai-result-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 12px; margin-bottom: 16px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
     }
+
     .ai-stat {
-      background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-sm);
-      padding: 14px; text-align: center; transition: var(--transition);
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      text-align: center;
+      transition: var(--transition);
     }
-    .ai-stat:hover { border-color: var(--accent); transform: translateY(-2px); }
-    .ai-stat .label { font-size: 10px; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
-    .ai-stat .value { font-size: 20px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
-    .ai-stat .value.green { color: var(--accent); }
-    .ai-stat .value.amber { color: var(--accent-2); }
-    .ai-stat .value.red { color: var(--danger); }
-    .ai-stat .value.blue { color: var(--info); }
-    .ai-stat .value.purple { color: var(--purple); }
+
+    .ai-stat:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .ai-stat .label {
+      font-size: 10px;
+      color: var(--fg-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+
+    .ai-stat .value {
+      font-size: 20px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .ai-stat .value.green {
+      color: var(--accent);
+    }
+
+    .ai-stat .value.amber {
+      color: var(--accent-2);
+    }
+
+    .ai-stat .value.red {
+      color: var(--danger);
+    }
+
+    .ai-stat .value.blue {
+      color: var(--info);
+    }
+
+    .ai-stat .value.purple {
+      color: var(--purple);
+    }
 
     /* === Log Panel === */
     .log-panel {
-      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
-      margin-top: 24px; overflow: hidden;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-top: 24px;
+      overflow: hidden;
     }
-    .log-header {
-      padding: 14px 20px; border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .log-header h3 { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
-    .log-header h3 i { color: var(--accent); }
-    .log-clear {
-      padding: 4px 12px; border-radius: 6px; border: 1px solid var(--border);
-      background: transparent; color: var(--fg-dim); font-size: 11px;
-      cursor: pointer; font-family: inherit; transition: var(--transition);
-    }
-    .log-clear:hover { border-color: var(--danger); color: var(--danger); }
 
-    .log-list { max-height: 300px; overflow-y: auto; }
-    .log-entry {
-      padding: 10px 20px; border-bottom: 1px solid var(--border);
-      font-size: 13px; display: flex; gap: 12px; align-items: flex-start;
+    .log-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .log-header h3 {
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .log-header h3 i {
+      color: var(--accent);
+    }
+
+    .log-clear {
+      padding: 4px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--fg-dim);
+      font-size: 11px;
+      cursor: pointer;
+      font-family: inherit;
       transition: var(--transition);
     }
-    .log-entry:hover { background: rgba(255,255,255,0.02); }
-    .log-entry:last-child { border-bottom: none; }
-    .log-time { color: var(--fg-muted); font-family: 'JetBrains Mono', monospace; font-size: 11px; white-space: nowrap; margin-top: 2px; }
-    .log-icon { font-size: 14px; margin-top: 1px; }
-    .log-icon.create { color: var(--accent); }
-    .log-icon.update { color: var(--accent-2); }
-    .log-icon.error { color: var(--danger); }
-    .log-msg { color: var(--fg-dim); line-height: 1.4; }
-    .log-msg strong { color: var(--fg); font-weight: 600; }
+
+    .log-clear:hover {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    .log-list {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .log-entry {
+      padding: 10px 20px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      transition: var(--transition);
+    }
+
+    .log-entry:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .log-entry:last-child {
+      border-bottom: none;
+    }
+
+    .log-time {
+      color: var(--fg-muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      white-space: nowrap;
+      margin-top: 2px;
+    }
+
+    .log-icon {
+      font-size: 14px;
+      margin-top: 1px;
+    }
+
+    .log-icon.create {
+      color: var(--accent);
+    }
+
+    .log-icon.update {
+      color: var(--accent-2);
+    }
+
+    .log-icon.error {
+      color: var(--danger);
+    }
+
+    .log-msg {
+      color: var(--fg-dim);
+      line-height: 1.4;
+    }
+
+    .log-msg strong {
+      color: var(--fg);
+      font-weight: 600;
+    }
 
     .empty-log {
-      padding: 40px; text-align: center; color: var(--fg-muted); font-size: 14px;
+      padding: 40px;
+      text-align: center;
+      color: var(--fg-muted);
+      font-size: 14px;
     }
-    .empty-log i { font-size: 32px; display: block; margin-bottom: 12px; opacity: 0.3; }
+
+    .empty-log i {
+      font-size: 32px;
+      display: block;
+      margin-bottom: 12px;
+      opacity: 0.3;
+    }
 
     /* === Spinner === */
-    .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
 
     /* === Toast === */
-    .toast-container { position: fixed; top: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
-    .toast {
-      padding: 12px 20px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500;
-      color: #fff; box-shadow: var(--shadow); animation: toastIn 0.4s ease;
-      display: flex; align-items: center; gap: 10px; max-width: 360px;
+    .toast-container {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
-    .toast.success { background: #059669; }
-    .toast.error { background: var(--danger); }
-    .toast.info { background: var(--info); }
-    @keyframes toastIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
 
-    /* === Priority Badges === */
-    .priority-badge {
-      display: inline-flex; align-items: center; gap: 4px;
-      padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 0.5px;
+    .toast {
+      padding: 12px 20px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 500;
+      color: #fff;
+      box-shadow: var(--shadow);
+      animation: toastIn 0.4s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      max-width: 360px;
     }
-    .priority-badge.critical { background: rgba(239,68,68,0.15); color: #f87171; }
-    .priority-badge.high { background: rgba(245,158,11,0.15); color: #fbbf24; }
-    .priority-badge.medium { background: rgba(59,130,246,0.15); color: #60a5fa; }
-    .priority-badge.low { background: rgba(16,185,129,0.15); color: #34d399; }
+
+    .toast.success {
+      background: #059669;
+    }
+
+    .toast.error {
+      background: var(--danger);
+    }
+
+    .toast.info {
+      background: var(--info);
+    }
+
+    @keyframes toastIn {
+      from {
+        opacity: 0;
+        transform: translateX(40px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
 
     /* === Scrollbar === */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: var(--fg-muted); }
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--fg-muted);
+    }
 
     /* === Responsive === */
     @media (max-width: 768px) {
-      .form-grid { grid-template-columns: 1fr; }
-      .config-bar { flex-direction: column; }
-      .config-bar .field { min-width: 100%; }
-      header { flex-direction: column; gap: 16px; align-items: flex-start; }
-      .tabs { flex-wrap: wrap; }
-      .tab-btn { font-size: 12px; padding: 10px 12px; }
-      .ai-result-grid { grid-template-columns: 1fr 1fr; }
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .config-bar {
+        flex-direction: column;
+      }
+
+      .config-bar .field {
+        min-width: 100%;
+      }
+
+      header {
+        flex-direction: column;
+        gap: 16px;
+        align-items: flex-start;
+      }
+
+      .tabs {
+        flex-wrap: wrap;
+      }
+
+      .tab-btn {
+        font-size: 12px;
+        padding: 10px 12px;
+      }
+
+      .ai-result-grid {
+        grid-template-columns: 1fr 1fr;
+      }
     }
 
-    /* Reduced motion */
     @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
     }
   </style>
 </head>
+
 <body>
 
-  <!-- Background effects -->
   <div class="bg-grid"></div>
   <div class="bg-orb bg-orb-1"></div>
   <div class="bg-orb bg-orb-2"></div>
   <div class="bg-orb bg-orb-3"></div>
 
-  <!-- Toast container -->
   <div class="toast-container" id="toastContainer"></div>
 
   <div class="app-container">
 
-    <!-- Header -->
     <header>
       <div class="logo-area">
         <div class="logo-icon"><i class="fas fa-bolt"></i></div>
@@ -398,7 +943,6 @@
       </div>
     </header>
 
-    <!-- Config Bar -->
     <div class="config-bar">
       <div class="field">
         <label>Webhook Base URL</label>
@@ -417,7 +961,6 @@
       </button>
     </div>
 
-    <!-- Tabs -->
     <div class="tabs">
       <button class="tab-btn active" onclick="switchTab('create')" data-tab="create">
         <i class="fas fa-plus-circle"></i> Create Task
@@ -432,10 +975,8 @@
 
     <!-- ====== CREATE TAB ====== -->
     <div class="tab-content active" id="tab-create">
-
       <div class="form-card">
         <div class="form-card-title"><i class="fas fa-rocket"></i> Create New Task</div>
-
         <div class="form-grid">
           <div class="field-group full">
             <label>Task Title *</label>
@@ -443,7 +984,8 @@
           </div>
           <div class="field-group full">
             <label>Description *</label>
-            <textarea id="createDesc" placeholder="Describe the task in detail. AI will analyze this to set priority, category, and deadline."></textarea>
+            <textarea id="createDesc"
+              placeholder="Describe the task in detail. AI will analyze this to set priority, category, and deadline."></textarea>
           </div>
           <div class="field-group">
             <label>Assignee Email</label>
@@ -468,7 +1010,6 @@
             <input type="text" id="createName" placeholder="John Doe">
           </div>
         </div>
-
         <div class="btn-row">
           <button class="btn-primary" id="createBtn" onclick="createTask()">
             <i class="fas fa-bolt"></i> Create with AI
@@ -478,26 +1019,39 @@
           </button>
         </div>
       </div>
-
-      <!-- Create Result -->
       <div id="createResult" style="display:none;"></div>
     </div>
 
     <!-- ====== UPDATE TAB ====== -->
     <div class="tab-content" id="tab-update">
-
       <div class="form-card">
         <div class="form-card-title"><i class="fas fa-sync-alt"></i> Update Task Status</div>
-
         <div class="form-grid">
+
           <div class="field-group">
-            <label>Task ID *</label>
-            <input type="number" id="updateTaskId" placeholder="e.g. 13">
+            <label>Select Task *</label>
+            <div class="field-group-row">
+              <div class="field-group">
+                <select id="updateTaskId" onchange="onTaskSelected()">
+                  <option value="">-- Fetch tasks first --</option>
+                </select>
+              </div>
+              <button class="btn-refresh" onclick="loadTasks()" title="Refresh task list">
+                <i class="fas fa-sync-alt"></i>
+              </button>
+            </div>
+            <span class="hint">Click refresh to load tasks from database</span>
           </div>
+
+          <div class="field-group">
+            <label>Current Status</label>
+            <input type="text" id="currentStatus" disabled placeholder="Select a task...">
+          </div>
+
           <div class="field-group">
             <label>New Status *</label>
             <select id="updateStatus">
-              <option value="">— Select Status —</option>
+              <option value="">— Select New Status —</option>
               <option value="pending">⏳ Pending</option>
               <option value="in_progress">🔄 In Progress</option>
               <option value="review">👀 Review</option>
@@ -530,8 +1084,6 @@
           </button>
         </div>
       </div>
-
-      <!-- Update Result -->
       <div id="updateResult" style="display:none;"></div>
     </div>
 
@@ -551,7 +1103,6 @@
       </div>
     </div>
 
-    <!-- Persistent Log Panel (shown in create/update tabs) -->
     <div class="log-panel" id="miniLog" style="display:none;">
       <div class="log-header">
         <h3><i class="fas fa-stream"></i> Recent Activity</h3>
@@ -563,11 +1114,10 @@
   </div>
 
   <script>
-    // ===== State =====
     let logs = [];
     let isConnected = false;
+    let tasksCache = []; // Store fetched tasks
 
-    // ===== Helpers =====
     function getBaseUrl() {
       return document.getElementById('baseUrl').value.replace(/\/+$/, '');
     }
@@ -583,7 +1133,6 @@
       };
     }
 
-    // ===== Toast =====
     function showToast(message, type = 'info') {
       const container = document.getElementById('toastContainer');
       const toast = document.createElement('div');
@@ -594,19 +1143,21 @@
       setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateX(40px)'; toast.style.transition = '0.3s'; setTimeout(() => toast.remove(), 300); }, 4000);
     }
 
-    // ===== Tabs =====
     function switchTab(tab) {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.querySelector('[data-tab="' + tab + '"]').classList.add('active');
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
       document.getElementById('tab-' + tab).classList.add('active');
 
-      // Show mini log in create/update tabs
       const miniLog = document.getElementById('miniLog');
       miniLog.style.display = (tab !== 'logs' && logs.length > 0) ? 'block' : 'none';
+
+      // Fetch tasks automatically when switching to Update tab
+      if (tab === 'update' && isConnected) {
+        loadTasks();
+      }
     }
 
-    // ===== Connection Test =====
     async function testConnection() {
       const url = getBaseUrl();
       if (!url) { showToast('Enter your ngrok URL first', 'error'); return; }
@@ -617,10 +1168,8 @@
       textEl.textContent = 'Testing...';
 
       try {
-        // Try a simple GET to the webhook base — n8n responds with 404 for GET on webhooks which means it's alive
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 8000);
-
         const res = await fetch(url + '/webhook/task-create', {
           method: 'OPTIONS',
           headers: getHeaders(),
@@ -628,12 +1177,14 @@
         }).catch(() => null);
 
         clearTimeout(timeout);
-        // Any response (even 404/405) means the server is reachable
         isConnected = true;
         statusEl.className = 'status-badge';
         textEl.textContent = 'Connected';
         showToast('Connected to n8n via ngrok', 'success');
         addLog('create', 'Connection established to <strong>' + url + '</strong>');
+
+        // Auto-fetch tasks once connected
+        loadTasks();
       } catch (e) {
         isConnected = false;
         statusEl.className = 'status-badge offline';
@@ -643,27 +1194,74 @@
       }
     }
 
-    // ===== Create Task =====
+    // ===== FETCH TASKS FOR DROPDOWN =====
+    async function loadTasks() {
+      const url = getBaseUrl();
+      if (!url) return;
+
+      const selectEl = document.getElementById('updateTaskId');
+
+      try {
+        const res = await fetch(url + '/webhook/task-list', {
+          method: 'GET',
+          headers: getHeaders()
+        });
+
+        if (!res.ok) throw new Error('Failed to fetch');
+
+        const data = await res.json();
+        tasksCache = Array.isArray(data) ? data : [];
+
+        selectEl.innerHTML = '<option value="">-- Select a Task (' + tasksCache.length + ' found) --</option>';
+
+        tasksCache.forEach(task => {
+          const option = document.createElement('option');
+          option.value = task.id;
+          const statusEmoji = {
+            pending: '⏳', in_progress: '🔄', review: '👀', completed: '✅', cancelled: '❌'
+          }[task.status] || '📋';
+          option.textContent = `#${task.id} - ${task.title} (${statusEmoji} ${task.status})`;
+          selectEl.appendChild(option);
+        });
+
+      } catch (e) {
+        selectEl.innerHTML = '<option value="">-- Error loading tasks --</option>';
+        console.error('Fetch tasks error:', e);
+      }
+    }
+
+    // Auto-fill current status when task is selected
+    function onTaskSelected() {
+      const selectedId = document.getElementById('updateTaskId').value;
+      const currentStatusEl = document.getElementById('currentStatus');
+      const updateStatusEl = document.getElementById('updateStatus');
+
+      if (!selectedId) {
+        currentStatusEl.value = '';
+        return;
+      }
+
+      const task = tasksCache.find(t => t.id == selectedId);
+      if (task) {
+        currentStatusEl.value = task.status || 'unknown';
+        // Auto-select the current status in the dropdown too, so user has to change it to trigger update
+        updateStatusEl.value = task.status || '';
+      }
+    }
+
     async function createTask() {
       const title = document.getElementById('createTitle').value.trim();
       const desc = document.getElementById('createDesc').value.trim();
 
-      if (!title || !desc) {
-        showToast('Title and Description are required', 'error');
-        return;
-      }
-      if (!getBaseUrl()) {
-        showToast('Set your ngrok Webhook URL first', 'error');
-        return;
-      }
+      if (!title || !desc) { showToast('Title and Description are required', 'error'); return; }
+      if (!getBaseUrl()) { showToast('Set your ngrok Webhook URL first', 'error'); return; }
 
       const btn = document.getElementById('createBtn');
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner"></span> Processing with AI...';
 
       const payload = {
-        title: title,
-        description: desc,
+        title, description: desc,
         assignee_email: document.getElementById('createEmail').value.trim() || undefined,
         deadline: document.getElementById('createDeadline').value || undefined,
         slack_id: document.getElementById('createSlack').value.trim() || undefined,
@@ -671,19 +1269,13 @@
         name: document.getElementById('createName').value.trim() || undefined
       };
 
-      // Remove undefined
       Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k]);
 
       const url = getBaseUrl() + '/webhook/task-create';
       const startTime = performance.now();
 
       try {
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: getHeaders(),
-          body: JSON.stringify(payload)
-        });
-
+        const res = await fetch(url, { method: 'POST', headers: getHeaders(), body: JSON.stringify(payload) });
         const elapsed = Math.round(performance.now() - startTime);
         const data = await res.json();
 
@@ -691,6 +1283,7 @@
           showToast('Task created successfully by AI', 'success');
           addLog('create', 'Created task <strong>"' + data.task.title + '"</strong> — Category: ' + data.task.category + ', Priority: ' + data.task.priority + ' (' + elapsed + 'ms)');
           renderCreateResult(data, elapsed);
+          loadTasks(); // Refresh dropdown after creating
         } else {
           showToast('Error: ' + (data.error || res.statusText), 'error');
           addLog('error', 'Create failed: <strong>' + (data.error || res.statusText) + '</strong>');
@@ -706,32 +1299,20 @@
       }
     }
 
-    // ===== Update Task =====
     async function updateTask() {
       const taskId = document.getElementById('updateTaskId').value;
       const status = document.getElementById('updateStatus').value;
 
-      if (!taskId || !status) {
-        showToast('Task ID and Status are required', 'error');
-        return;
-      }
-      if (!getBaseUrl()) {
-        showToast('Set your ngrok Webhook URL first', 'error');
-        return;
-      }
+      if (!taskId || !status) { showToast('Task and New Status are required', 'error'); return; }
+      if (!getBaseUrl()) { showToast('Set your ngrok Webhook URL first', 'error'); return; }
 
       const btn = document.getElementById('updateBtn');
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner"></span> Updating...';
 
-      const payload = {
-        task_id: parseInt(taskId),
-        status: status
-      };
-
+      const payload = { task_id: parseInt(taskId), status };
       const priority = document.getElementById('updatePriority').value;
       if (priority) payload.priority = priority;
-
       const deadline = document.getElementById('updateDeadline').value;
       if (deadline) payload.deadline = deadline;
 
@@ -739,18 +1320,14 @@
       const startTime = performance.now();
 
       try {
-        const res = await fetch(url, {
-          method: 'PUT',
-          headers: getHeaders(),
-          body: JSON.stringify(payload)
-        });
-
+        const res = await fetch(url, { method: 'PUT', headers: getHeaders(), body: JSON.stringify(payload) });
         const elapsed = Math.round(performance.now() - startTime);
         const data = await res.json();
 
         showToast('Task updated — status changed to ' + status, 'success');
         addLog('update', 'Updated task <strong>#' + taskId + '</strong> — Status: <strong>' + status + '</strong> (' + elapsed + 'ms)');
         renderUpdateResult(data, elapsed, taskId);
+        loadTasks(); // Refresh dropdown after updating
       } catch (e) {
         showToast('Request failed — check ngrok and n8n', 'error');
         addLog('error', 'Update failed: <strong>' + e.message + '</strong>');
@@ -761,12 +1338,10 @@
       }
     }
 
-    // ===== Render Results =====
     function renderCreateResult(data, elapsed) {
       const t = data.task || {};
       const container = document.getElementById('createResult');
       container.style.display = 'block';
-
       const priorityClass = t.priority || 'medium';
       const confidencePct = t.ai_confidence ? Math.round(parseFloat(t.ai_confidence) * 100) : '—';
 
@@ -778,38 +1353,19 @@
           </div>
           <div class="result-body">
             <div class="ai-result-grid">
-              <div class="ai-stat">
-                <div class="label">Category</div>
-                <div class="value blue">${(t.category || '—').toUpperCase()}</div>
-              </div>
-              <div class="ai-stat">
-                <div class="label">Priority</div>
-                <div class="value ${priorityClass === 'critical' ? 'red' : priorityClass === 'high' ? 'amber' : priorityClass === 'medium' ? 'blue' : 'green'}">${(t.priority || '—').toUpperCase()}</div>
-              </div>
-              <div class="ai-stat">
-                <div class="label">AI Confidence</div>
-                <div class="value purple">${confidencePct}%</div>
-              </div>
-              <div class="ai-stat">
-                <div class="label">Deadline</div>
-                <div class="value green" style="font-size:14px;">${t.deadline || t.ai_suggested_deadline || '—'}</div>
-              </div>
-              <div class="ai-stat">
-                <div class="label">AI Suggested</div>
-                <div class="value" style="font-size:14px;color:var(--fg-dim);">${t.ai_suggested_deadline || '—'}</div>
-              </div>
-              <div class="ai-stat">
-                <div class="label">AI Model</div>
-                <div class="value" style="font-size:12px;color:var(--fg-dim);">${t.ai_model || 'Groq'}</div>
-              </div>
+              <div class="ai-stat"><div class="label">Category</div><div class="value blue">${(t.category || '—').toUpperCase()}</div></div>
+              <div class="ai-stat"><div class="label">Priority</div><div class="value ${priorityClass === 'critical' ? 'red' : priorityClass === 'high' ? 'amber' : priorityClass === 'medium' ? 'blue' : 'green'}">${(t.priority || '—').toUpperCase()}</div></div>
+              <div class="ai-stat"><div class="label">AI Confidence</div><div class="value purple">${confidencePct}%</div></div>
+              <div class="ai-stat"><div class="label">Deadline</div><div class="value green" style="font-size:14px;">${t.deadline || t.ai_suggested_deadline || '—'}</div></div>
+              <div class="ai-stat"><div class="label">AI Suggested</div><div class="value" style="font-size:14px;color:var(--fg-dim);">${t.ai_suggested_deadline || '—'}</div></div>
+              <div class="ai-stat"><div class="label">AI Model</div><div class="value" style="font-size:12px;color:var(--fg-dim);">${t.ai_model || 'Groq'}</div></div>
             </div>
             <div style="background:var(--bg-secondary);border-radius:var(--radius-sm);padding:14px;border:1px solid var(--border);">
               <div style="font-size:11px;color:var(--fg-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Full Response</div>
               <pre>${JSON.stringify(data, null, 2)}</pre>
             </div>
           </div>
-        </div>
-      `;
+        </div>`;
     }
 
     function renderUpdateResult(data, elapsed, taskId) {
@@ -826,8 +1382,7 @@
               <pre>${JSON.stringify(data, null, 2)}</pre>
             </div>
           </div>
-        </div>
-      `;
+        </div>`;
     }
 
     function renderErrorResult(containerId, data, status) {
@@ -844,11 +1399,9 @@
               <pre style="color:#f87171;">${JSON.stringify(data, null, 2)}</pre>
             </div>
           </div>
-        </div>
-      `;
+        </div>`;
     }
 
-    // ===== Logging =====
     function addLog(type, message) {
       const now = new Date();
       const time = now.toLocaleTimeString('en-US', { hour12: false });
@@ -859,52 +1412,35 @@
 
     function renderLogs() {
       const render = (list) => {
-        if (logs.length === 0) {
-          return '<div class="empty-log"><i class="fas fa-inbox"></i>No activity yet.</div>';
-        }
+        if (logs.length === 0) return '<div class="empty-log"><i class="fas fa-inbox"></i>No activity yet.</div>';
         return logs.map(l => {
           const iconClass = l.type === 'create' ? 'create' : l.type === 'update' ? 'update' : 'error';
           const icon = l.type === 'create' ? 'fa-plus-circle' : l.type === 'update' ? 'fa-sync-alt' : 'fa-exclamation-circle';
-          return `<div class="log-entry">
-            <span class="log-time">${l.time}</span>
-            <i class="fas ${icon} log-icon ${iconClass}"></i>
-            <span class="log-msg">${l.message}</span>
-          </div>`;
+          return `<div class="log-entry"><span class="log-time">${l.time}</span><i class="fas ${icon} log-icon ${iconClass}"></i><span class="log-msg">${l.message}</span></div>`;
         }).join('');
       };
-
       document.getElementById('logList').innerHTML = render(logs);
-
       const miniLog = document.getElementById('miniLog');
       const miniLogList = document.getElementById('miniLogList');
-      if (logs.length > 0) {
-        miniLog.style.display = 'block';
-        miniLogList.innerHTML = render(logs.slice(0, 5));
-      }
+      if (logs.length > 0) { miniLog.style.display = 'block'; miniLogList.innerHTML = render(logs.slice(0, 5)); }
     }
 
-    function clearLogs() {
-      logs = [];
-      renderLogs();
-      document.getElementById('miniLog').style.display = 'none';
-    }
+    function clearLogs() { logs = []; renderLogs(); document.getElementById('miniLog').style.display = 'none'; }
 
-    // ===== Form Clear =====
     function clearCreateForm() {
-      ['createTitle','createDesc','createEmail','createDeadline','createSlack','createPhone','createName'].forEach(id => {
-        document.getElementById(id).value = '';
-      });
+      ['createTitle', 'createDesc', 'createEmail', 'createDeadline', 'createSlack', 'createPhone', 'createName'].forEach(id => { document.getElementById(id).value = ''; });
       document.getElementById('createResult').style.display = 'none';
     }
 
     function clearUpdateForm() {
-      ['updateTaskId','updateStatus','updatePriority','updateDeadline'].forEach(id => {
-        document.getElementById(id).value = '';
-      });
+      document.getElementById('updateTaskId').value = '';
+      document.getElementById('updateStatus').value = '';
+      document.getElementById('updatePriority').value = '';
+      document.getElementById('updateDeadline').value = '';
+      document.getElementById('currentStatus').value = '';
       document.getElementById('updateResult').style.display = 'none';
     }
 
-    // ===== Persist config to localStorage =====
     function saveConfig() {
       localStorage.setItem('tm_baseUrl', document.getElementById('baseUrl').value);
       localStorage.setItem('tm_authUser', document.getElementById('authUser').value);
@@ -916,14 +1452,9 @@
       document.getElementById('authPass').value = localStorage.getItem('tm_authPass') || '';
     }
 
-    // Auto-save config on change
-    document.querySelectorAll('#baseUrl, #authUser, #authPass').forEach(el => {
-      el.addEventListener('input', saveConfig);
-    });
-
-    // Init
+    document.querySelectorAll('#baseUrl, #authUser, #authPass').forEach(el => { el.addEventListener('input', saveConfig); });
     loadConfig();
   </script>
-
 </body>
+
 </html>
