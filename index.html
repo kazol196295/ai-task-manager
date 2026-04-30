@@ -1194,41 +1194,44 @@
       }
     }
 
-    // ===== FETCH TASKS FOR DROPDOWN =====
-    async function loadTasks() {
-      const url = getBaseUrl();
-      if (!url) return;
+      // ===== FETCH TASKS FOR DROPDOWN =====
+      async function loadTasks() {
+        const url = getBaseUrl();
+        if (!url) return;
 
-      const selectEl = document.getElementById('updateTaskId');
+        const selectEl = document.getElementById('updateTaskId');
 
-      try {
-        const res = await fetch(url + '/webhook/task-list', {
-          method: 'GET',
-          headers: getHeaders()
-        });
+        try {
+          const res = await fetch(url + '/webhook/task-list', {
+            method: 'GET',
+            headers: {
+              ...getHeaders(),
+              'ngrok-skip-browser-warning': 'true' // ADD THIS LINE TO BYPASS NGROK PAGE
+            }
+          });
 
-        if (!res.ok) throw new Error('Failed to fetch');
+          if (!res.ok) throw new Error('Failed to fetch');
 
-        const data = await res.json();
-        tasksCache = Array.isArray(data) ? data : [];
+          const data = await res.json();
+          tasksCache = Array.isArray(data) ? data : [];
 
-        selectEl.innerHTML = '<option value="">-- Select a Task (' + tasksCache.length + ' found) --</option>';
+          selectEl.innerHTML = '<option value="">-- Select a Task (' + tasksCache.length + ' found) --</option>';
 
-        tasksCache.forEach(task => {
-          const option = document.createElement('option');
-          option.value = task.id;
-          const statusEmoji = {
-            pending: '⏳', in_progress: '🔄', review: '👀', completed: '✅', cancelled: '❌'
-          }[task.status] || '📋';
-          option.textContent = `#${task.id} - ${task.title} (${statusEmoji} ${task.status})`;
-          selectEl.appendChild(option);
-        });
+          tasksCache.forEach(task => {
+            const option = document.createElement('option');
+            option.value = task.id;
+            const statusEmoji = {
+              pending: '⏳', in_progress: '🔄', review: '👀', completed: '✅', cancelled: '❌'
+            }[task.status] || '📋';
+            option.textContent = `#${task.id} - ${task.title} (${statusEmoji} ${task.status})`;
+            selectEl.appendChild(option);
+          });
 
-      } catch (e) {
-        selectEl.innerHTML = '<option value="">-- Error loading tasks --</option>';
-        console.error('Fetch tasks error:', e);
+        } catch (e) {
+          selectEl.innerHTML = '<option value="">-- Error loading tasks --</option>';
+          console.error('Fetch tasks error:', e);
+        }
       }
-    }
 
     // Auto-fill current status when task is selected
     function onTaskSelected() {
