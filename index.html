@@ -1172,7 +1172,10 @@
         const timeout = setTimeout(() => controller.abort(), 8000);
         const res = await fetch(url + '/webhook/task-create', {
           method: 'OPTIONS',
-          headers: getHeaders(),
+          headers: { 
+            'Authorization': 'Basic ' + getAuth(), 
+            'ngrok-skip-browser-warning': 'true' 
+          },
           signal: controller.signal
         }).catch(() => null);
 
@@ -1278,7 +1281,10 @@
       const startTime = performance.now();
 
       try {
-        const res = await fetch(url, { method: 'POST', headers: getHeaders(), body: JSON.stringify(payload) });
+        const res = await fetch(url, { method: 'POST', headers: {
+            'Authorization': 'Basic ' + getAuth(),
+            'ngrok-skip-browser-warning': 'true'
+          }, body: JSON.stringify(payload) });
         const elapsed = Math.round(performance.now() - startTime);
         const data = await res.json();
 
@@ -1323,7 +1329,10 @@
       const startTime = performance.now();
 
       try {
-        const res = await fetch(url, { method: 'PUT', headers: getHeaders(), body: JSON.stringify(payload) });
+        const res = await fetch(url, { method: 'PUT', headers: {
+            'Authorization': 'Basic ' + getAuth(),
+            'ngrok-skip-browser-warning': 'true'
+          }, body: JSON.stringify(payload) });
         const elapsed = Math.round(performance.now() - startTime);
         const data = await res.json();
 
