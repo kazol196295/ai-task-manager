@@ -1255,100 +1255,110 @@
       }
     }
 
-    async function createTask() {
-      const title = document.getElementById('createTitle').value.trim();
-      const desc = document.getElementById('createDesc').value.trim();
+      async function createTask() {
+        const title = document.getElementById('createTitle').value.trim();
+        const desc = document.getElementById('createDesc').value.trim();
 
-      if (!title || !desc) { showToast('Title and Description are required', 'error'); return; }
-      if (!getBaseUrl()) { showToast('Set your ngrok Webhook URL first', 'error'); return; }
+        if (!title || !desc) { showToast('Title and Description are required', 'error'); return; }
+        if (!getBaseUrl()) { showToast('Set your ngrok Webhook URL first', 'error'); return; }
 
-      const btn = document.getElementById('createBtn');
-      btn.disabled = true;
-      btn.innerHTML = '<span class="spinner"></span> Processing with AI...';
+        const btn = document.getElementById('createBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Processing with AI...';
 
-      const payload = {
-        title, description: desc,
-        assignee_email: document.getElementById('createEmail').value.trim() || undefined,
-        deadline: document.getElementById('createDeadline').value || undefined,
-        slack_id: document.getElementById('createSlack').value.trim() || undefined,
-        phone: document.getElementById('createPhone').value.trim() || undefined,
-        name: document.getElementById('createName').value.trim() || undefined
-      };
+        const payload = {
+          title, description: desc,
+          assignee_email: document.getElementById('createEmail').value.trim() || undefined,
+          deadline: document.getElementById('createDeadline').value || undefined,
+          slack_id: document.getElementById('createSlack').value.trim() || undefined,
+          phone: document.getElementById('createPhone').value.trim() || undefined,
+          name: document.getElementById('createName').value.trim() || undefined
+        };
 
-      Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k]);
+        Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k]);
 
-      const url = getBaseUrl() + '/webhook/task-create';
-      const startTime = performance.now();
+        const url = getBaseUrl() + '/webhook/task-create';
+        const startTime = performance.now();
 
-      try {
-        const res = await fetch(url, { method: 'POST', headers: {
-            'Authorization': 'Basic ' + getAuth(),
-            'ngrok-skip-browser-warning': 'true'
-          }, body: JSON.stringify(payload) });
-        const elapsed = Math.round(performance.now() - startTime);
-        const data = await res.json();
+        try {
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json', // <--- THIS IS THE FIX
+              'Authorization': 'Basic ' + getAuth(),
+              'ngrok-skip-browser-warning': 'true'
+            },
+            body: JSON.stringify(payload)
+          });
+          const elapsed = Math.round(performance.now() - startTime);
+          const data = await res.json();
 
-        if (res.ok && data.success) {
-          showToast('Task created successfully by AI', 'success');
-          addLog('create', 'Created task <strong>"' + data.task.title + '"</strong> — Category: ' + data.task.category + ', Priority: ' + data.task.priority + ' (' + elapsed + 'ms)');
-          renderCreateResult(data, elapsed);
-          loadTasks(); // Refresh dropdown after creating
-        } else {
-          showToast('Error: ' + (data.error || res.statusText), 'error');
-          addLog('error', 'Create failed: <strong>' + (data.error || res.statusText) + '</strong>');
-          renderErrorResult('createResult', data, res.status);
+          if (res.ok && data.success) {
+            showToast('Task created successfully by AI', 'success');
+            addLog('create', 'Created task <strong>"' + data.task.title + '"</strong> — Category: ' + data.task.category + ', Priority: ' + data.task.priority + ' (' + elapsed + 'ms)');
+            renderCreateResult(data, elapsed);
+            loadTasks(); // Refresh dropdown after creating
+          } else {
+            showToast('Error: ' + (data.error || res.statusText), 'error');
+            addLog('error', 'Create failed: <strong>' + (data.error || res.statusText) + '</strong>');
+            renderErrorResult('createResult', data, res.status);
+          }
+        } catch (e) {
+          showToast('Request failed — check ngrok and n8n', 'error');
+          addLog('error', 'Network error: <strong>' + e.message + '</strong>');
+          renderErrorResult('createResult', { error: e.message }, 0);
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-bolt"></i> Create with AI';
         }
-      } catch (e) {
-        showToast('Request failed — check ngrok and n8n', 'error');
-        addLog('error', 'Network error: <strong>' + e.message + '</strong>');
-        renderErrorResult('createResult', { error: e.message }, 0);
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-bolt"></i> Create with AI';
       }
-    }
 
-    async function updateTask() {
-      const taskId = document.getElementById('updateTaskId').value;
-      const status = document.getElementById('updateStatus').value;
+      async function updateTask() {
+        const taskId = document.getElementById('updateTaskId').value;
+        const status = document.getElementById('updateStatus').value;
 
-      if (!taskId || !status) { showToast('Task and New Status are required', 'error'); return; }
-      if (!getBaseUrl()) { showToast('Set your ngrok Webhook URL first', 'error'); return; }
+        if (!taskId || !status) { showToast('Task and New Status are required', 'error'); return; }
+        if (!getBaseUrl()) { showToast('Set your ngrok Webhook URL first', 'error'); return; }
 
-      const btn = document.getElementById('updateBtn');
-      btn.disabled = true;
-      btn.innerHTML = '<span class="spinner"></span> Updating...';
+        const btn = document.getElementById('updateBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Updating...';
 
-      const payload = { task_id: parseInt(taskId), status };
-      const priority = document.getElementById('updatePriority').value;
-      if (priority) payload.priority = priority;
-      const deadline = document.getElementById('updateDeadline').value;
-      if (deadline) payload.deadline = deadline;
+        const payload = { task_id: parseInt(taskId), status };
+        const priority = document.getElementById('updatePriority').value;
+        if (priority) payload.priority = priority;
+        const deadline = document.getElementById('updateDeadline').value;
+        if (deadline) payload.deadline = deadline;
 
-      const url = getBaseUrl() + '/webhook/task-update';
-      const startTime = performance.now();
+        const url = getBaseUrl() + '/webhook/task-update';
+        const startTime = performance.now();
 
-      try {
-        const res = await fetch(url, { method: 'PUT', headers: {
-            'Authorization': 'Basic ' + getAuth(),
-            'ngrok-skip-browser-warning': 'true'
-          }, body: JSON.stringify(payload) });
-        const elapsed = Math.round(performance.now() - startTime);
-        const data = await res.json();
+        try {
+          const res = await fetch(url, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json', // <--- THIS IS THE FIX
+              'Authorization': 'Basic ' + getAuth(),
+              'ngrok-skip-browser-warning': 'true'
+            },
+            body: JSON.stringify(payload)
+          });
+          const elapsed = Math.round(performance.now() - startTime);
+          const data = await res.json();
 
-        showToast('Task updated — status changed to ' + status, 'success');
-        addLog('update', 'Updated task <strong>#' + taskId + '</strong> — Status: <strong>' + status + '</strong> (' + elapsed + 'ms)');
-        renderUpdateResult(data, elapsed, taskId);
-        loadTasks(); // Refresh dropdown after updating
-      } catch (e) {
-        showToast('Request failed — check ngrok and n8n', 'error');
-        addLog('error', 'Update failed: <strong>' + e.message + '</strong>');
-        renderErrorResult('updateResult', { error: e.message }, 0);
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-sync-alt"></i> Update Task';
+          showToast('Task updated — status changed to ' + status, 'success');
+          addLog('update', 'Updated task <strong>#' + taskId + '</strong> — Status: <strong>' + status + '</strong> (' + elapsed + 'ms)');
+          renderUpdateResult(data, elapsed, taskId);
+          loadTasks(); // Refresh dropdown after updating
+        } catch (e) {
+          showToast('Request failed — check ngrok and n8n', 'error');
+          addLog('error', 'Update failed: <strong>' + e.message + '</strong>');
+          renderErrorResult('updateResult', { error: e.message }, 0);
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-sync-alt"></i> Update Task';
+        }
       }
-    }
 
     function renderCreateResult(data, elapsed) {
       const t = data.task || {};
